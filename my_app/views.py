@@ -1,19 +1,16 @@
 from django.shortcuts import render
-from django.http import HttpResponse
-
+from django.http import JsonResponse
+from .models import Agent
 # Create your views here.
 
 def index(request):
-    with open('user_agents.txt', 'a') as file:
-            file.write(request.META.get('HTTP_USER_AGENT', 'Unknown') + '\n')
+    nom =request.META.get('HTTP_USER_AGENT', 'Unknown')
+    agent = Agent(nom=nom)
+    agent.save() 
     return render(request,'my_app/index.html')
 
 
 def read(request):
-    try:
-        with open('user_agents.txt', 'r') as file:
-            content = file.read()
-    except FileNotFoundError:
-        content = "Le fichier des User-Agent n'existe pas ou n'a pas encore été créé."
-
-    return HttpResponse(content, content_type='text/plain')
+    agents = Agent.objects.values_list('nom', flat=True)
+    agents_list = [agent for agent in agents]
+    return JsonResponse(agents_list, safe=False)
